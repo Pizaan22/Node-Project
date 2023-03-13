@@ -12,47 +12,25 @@
 
     <center>
         <h1>Record and Save Video through Camera</h1>
-        <video id="video" width="640" height="480" autoplay></video>
+        <video id="video" width="640" height="480" autoplay></video><br>
         <button id="start" onclick="startRecording()">Start Recording</button>
         <button id="stop" onclick="stopRecording()" disabled>Stop Recording</button>
         <button id="download" onclick="downloadRecording()" disabled>Download Recording</button>
         <form>
-            <input type="text" name="file-name" id="name">
-            <input type="file" name="file" id="files" multiple><br><br>
-            <button type="submit">Submit</button>
+            <input type="text" name="file-name" id="name" placeholder="File name" disabled>
+            <input type="file" name="file" id="files" multiple disabled hidden><br><br>
+            <button id="upload" type="submit" disabled>Upload</button>
         </form>
     </center>
 
 
     <script>
-        const form = document.querySelector('form');
-        form.addEventListener('submit', (e) => {
-
-            e.preventDefault();
-            // Prevents HTML handling submission
-            const name = document.getElementById("name");
-            const files = document.getElementById("files");
-            const formData = new FormData();
-            // Creates empty formData object
-            formData.append("name", name.value);
-            // Appends value of text input
-            for (let i = 0; i < files.files.length; i++) {
-                formData.append("files", files.files[i]);
-            }
-            // Appends value(s) of file input
-            // Post data to Node and Express server:
-            fetch('http://127.0.0.1:5000/api', {
-                method: 'POST',
-                body: formData, // Payload is formData object
-            })
-                .then(res => res.json())
-                .then(data => console.log(data));
-        })
-
         var video = document.getElementById('video');
         var startButton = document.getElementById('start');
         var stopButton = document.getElementById('stop');
         var downloadButton = document.getElementById('download');
+        var uploadButton = document.getElementById("upload");
+        var fileName = document.getElementById("name");
         var mediaRecorder;
         var chunks = [];
 
@@ -75,6 +53,8 @@
             startButton.disabled = false;
             stopButton.disabled = true;
             downloadButton.disabled = false;
+            uploadButton.disabled = false;
+            fileName.disabled = false;
         }
 
         function downloadRecording() {
@@ -91,6 +71,37 @@
                 URL.revokeObjectURL(url);
             }, 100);
         }
+
+
+        function uploadRecording(){
+            var blob = new Blob(chunks, { type: 'video/mp4' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+
+            const formData = new FormData();
+            formData.append("name", fileName);
+            formData.append("files", a);
+        }
+
+        const form = document.querySelector('form'); //uploadRecording
+
+        form.addEventListener('submit', (e) => {
+
+            e.preventDefault();
+
+            uploadRecording();
+
+            // Appends value(s) of file input
+            // Post data to Node and Express server:
+            fetch('http://127.0.0.1:5000/api', {
+                method: 'POST',
+                body: formData, // Payload is formData object
+            })
+                .then(res => res.json())
+                .then(data => console.log(data));
+        })
     </script>
 
 </body>
